@@ -3,217 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>TV Argentina</title>
+    <title>TV Argentina HD</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; background: #111; font-family: Arial, sans-serif; color: white; overflow: hidden; }
-
-        #channel-name {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 28px;
-            font-weight: bold;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
-            background: rgba(0,0,0,0.6);
-            padding: 10px 30px;
-            border-radius: 8px;
-            z-index: 10;
-            white-space: nowrap;
-            transition: opacity 0.3s;
+        :root {
+            --ln-blue: #0056b3;
+            --glass: rgba(0, 0, 0, 0.7);
+            --accent: #ffffff;
         }
 
-        #video-area {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: calc(100vw - 100px);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: #000; 
+            color: white; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; 
             height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        }
+
+        /* Video Layer */
+        #video-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
             background: #000;
         }
+        
+        iframe { width: 100%; height: 100%; pointer-events: none; border: none; }
 
-        #player {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        #controls {
+        /* Top Channel Indicator */
+        #channel-info {
             position: fixed;
-            right: 0;
-            top: 0;
-            width: 100px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            background: rgba(0,0,0,0.7);
-            z-index: 10;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        #controls button {
-            width: 60px;
-            height: 60px;
+        #channel-name {
             font-size: 28px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.15);
-            border: 2px solid rgba(255,255,255,0.4);
-            color: white;
-            border-radius: 50%;
-            outline: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
+            font-weight: 700;
+            background: var(--glass);
+            backdrop-filter: blur(8px);
+            padding: 10px 40px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        #controls button:hover,
-        #controls button:focus {
-            background: rgba(255,255,255,0.35);
-            outline: 3px solid #e53935;
-            outline-offset: 2px;
-        }
-
-        #controls button:active {
-            background: rgba(255,255,255,0.5);
-        }
-
-        #start-btn:focus {
-            outline: 3px solid #fff;
-            outline-offset: 4px;
-        }
-
-        #start-overlay {
+        /* Right Sidebar Controls */
+        #ui-wrapper {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
+            right: 0; top: 0; height: 100%; width: 120px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .btn-nav {
+            width: 65px; height: 65px; margin: 10px 0;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1); color: white;
+            font-size: 28px; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-nav:focus {
+            background: var(--ln-blue);
+            border-color: white;
+            transform: scale(1.2);
+            outline: none;
+            box-shadow: 0 0 15px var(--ln-blue);
+        }
+
+        /* LN Icon Button */
+        #ln-link {
+            margin-top: 20px;
+            text-decoration: none;
+            outline: none;
+            transition: transform 0.2s;
+        }
+        
+        #ln-link img {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+
+        #ln-link:focus img {
+            transform: scale(1.2);
+            border-color: white;
+            box-shadow: 0 0 20px rgba(255,255,255,0.4);
+        }
+
+        /* Initial Start Overlay */
+        #start-overlay {
+            position: fixed; inset: 0; background: #0a0a0a;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 1000;
         }
 
         #start-btn {
-            padding: 20px 40px;
-            font-size: 20px;
-            cursor: pointer;
-            background: #e53935;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            transition: background 0.2s;
+            padding: 20px 60px; font-size: 22px; font-weight: bold;
+            background: var(--ln-blue); color: white; border: none;
+            border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s;
         }
 
-        #start-btn:hover {
-            background: #c62828;
-        }
+        #start-btn:focus { transform: scale(1.1); outline: 3px solid white; }
+
+        .hidden { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="start-overlay">
-    <button id="start-btn" tabindex="1" onclick="startViewing()">CLICK TO START WATCHING</button>
+    <button id="start-btn" onclick="initPlayer()">ENTRAR A TV</button>
 </div>
 
-<div id="channel-name" style="display:none;"></div>
-
-<div id="video-area">
-    <iframe id="player"
-            src=""
-            allow="autoplay; encrypted-media"
-            allowfullscreen>
-    </iframe>
+<div id="channel-info" class="hidden">
+    <div id="channel-name">Cargando...</div>
 </div>
 
-<div id="controls">
-    <button id="btn-up" tabindex="2" onclick="switchChannel(-1)" title="Previous channel">&#9650;</button>
-    <button id="btn-down" tabindex="3" onclick="switchChannel(1)" title="Next channel">&#9660;</button>
+<div id="video-container">
+    <div id="player"></div>
 </div>
 
-<script>
-    var channels = [
-        { name: "14. TN", videoId: "cb12KmMMDJA" },
-        { name: "17. Crónica", videoId: "JC7f3EUDaqw" },
-        { name: "18. Canal 26", videoId: "Akf2MWm8vfk" },
-        { name: "19. A24", videoId: "ArKbAx1K-2U" },
-        { name: "24. Argentina|12", videoId: "JrmCaXL5GZs" },
-        { name: "560. Al Jazeera", videoId: "gCNeDWCI0vo" },
-        { name: "562. Euronews", videoId: "pykpO5kQJ98" },
-        { name: "568. France 24 En Français", videoId: "l8PMl7tUDIE" },
-        { name: "575. France 24 En Español", videoId: "Y-IlMeCCtIg" },
-    ];
-
-    var currentIndex = 0;
-
-    // Samsung TV remote key codes — standard Tizen (newer models)
-    var KEY_ENTER       = 13;
-    var KEY_BACK        = 10009;
-    var KEY_UP          = 38;
-    var KEY_DOWN        = 40;
-    var KEY_CH_UP       = 427;   // CH+ newer Tizen
-    var KEY_CH_DOWN     = 428;   // CH- newer Tizen
-    var KEY_CH_UP_ALT   = 29460; // CH+ older Tizen / some models
-    var KEY_CH_DOWN_ALT = 29461; // CH- older Tizen / some models
-    var KEY_PLAY        = 415;
-    var KEY_PAUSE       = 19;
-    var KEY_STOP        = 413;
-
-    function startViewing() {
-        document.getElementById("start-overlay").style.display = "none";
-        document.getElementById("channel-name").style.display = "block";
-        loadChannel(0);
-        document.getElementById("btn-up").focus();
-    }
-
-    function loadChannel(index) {
-        var channel = channels[index];
-        var player = document.getElementById("player");
-        player.src = "https://www.youtube.com/embed/" + channel.videoId + "?autoplay=1&mute=0";
-        document.getElementById("channel-name").textContent = channel.name;
-    }
-
-    function switchChannel(direction) {
-        currentIndex = (currentIndex + direction + channels.length) % channels.length;
-        loadChannel(currentIndex);
-    }
-
-    document.addEventListener("keydown", function(e) {
-        var code = e.keyCode || e.which;
-
-        // Arrow keys + Samsung CH+/CH- (both keycode sets)
-        if (code === KEY_UP || code === KEY_CH_UP || code === KEY_CH_UP_ALT) {
-            e.preventDefault();
-            switchChannel(-1);
-        } else if (code === KEY_DOWN || code === KEY_CH_DOWN || code === KEY_CH_DOWN_ALT) {
-            e.preventDefault();
-            switchChannel(1);
-        } else if (code === KEY_ENTER) {
-            // If start overlay is visible, start viewing
-            var overlay = document.getElementById("start-overlay");
-            if (overlay && overlay.style.display !== "none") {
-                e.preventDefault();
-                startViewing();
-            }
-        } else if (code === KEY_BACK) {
-            // Prevent Samsung TV from leaving the app on Back press
-            e.preventDefault();
-        } else if (code === KEY_PLAY || code === KEY_PAUSE || code === KEY_STOP) {
-            e.preventDefault();
-        }
-    });
-
-    // Set initial focus for D-pad navigation
-    window.addEventListener("load", function() {
-        document.getElementById("start-btn").focus();
-    });
-</script>
-</body>
-</html>
+<div id="ui-wrapper" class="hidden">
+    <button class="btn-nav" id="btn-up" onclick="changeChannel(-1)" title="Canal Anterior">▲</button>
+    <button class="btn-nav" id="btn-down" onclick="changeChannel(1)" title="Siguiente Canal">▼</button>
+    
+    <a id="ln-link" href="https://www.youtube.com/watch?v=DVZ2rJQb_0g" target="_blank">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABY77XmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMAUExURf////7+/v39/fLy8u/v7+Xl5ePj49/f39vb29PT08vLy8TExL+/v7u7u7Ozs6+vr6Ojo5+fn5mZmZOTk4+Pj4mJiYWFhYGBgX5+fnl5eXFxcW9vb2tra2ZmZl5eXlpaWlNTU09PT0tLS0ZGRkJCQj9PTz5OTjtLSzZKSjNLSzJKSi9JSi1JSi5KSi1JSi5KSi9JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSun0EkkAAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADNUlEQVRoB7VbZ3vTMBB9idPkKAnDInToAnToAnToAnToAnToAmXvvP9f8iSrnWRLtmS9mI/v8+S8u7vT3ZUn6V6tVv+p6qU8yv69qWvM9ZatGjPlat9C7fV+D7U/+8fS9/K1vX8OfS9p38K7+7QG3pUnNbD69NqA6vNr9783D6uBe/O9etS5N99V78396l7fH07f6+H0vYfT9+7S997D6fseTt97D6fvPZy+93D6vofT9/6m6Xt/U/S9vyn63t8Ufe9vir73N0Xf+5ui7/1N0ff+pui7YvC9X/9pC+Kvvp5rF63+pD936u9dfdfW+3rdrrNn3VvXF517S77YqP+u9F0pX2zcX9XfK/252p+rX6p/Vvpz6Xv7p9O3S99W+nLpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK
