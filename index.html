@@ -7,8 +7,7 @@
     <style>
         :root {
             --ln-blue: #0056b3;
-            --glass: rgba(0, 0, 0, 0.7);
-            --accent: #ffffff;
+            --glass: rgba(0, 0, 0, 0.8);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,110 +15,99 @@
         body { 
             background: #000; 
             color: white; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, sans-serif;
             overflow: hidden; 
             height: 100vh;
         }
 
-        /* Video Layer */
+        /* Video Container */
         #video-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1;
-            background: #000;
         }
         
         iframe { width: 100%; height: 100%; pointer-events: none; border: none; }
 
-        /* Top Channel Indicator */
+        /* Channel Info Overlay */
         #channel-info {
             position: fixed;
             top: 30px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-
-        #channel-name {
-            font-size: 28px;
-            font-weight: 700;
-            background: var(--glass);
-            backdrop-filter: blur(8px);
-            padding: 10px 40px;
-            border-radius: 50px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Right Sidebar Controls */
-        #ui-wrapper {
-            position: fixed;
-            right: 0; top: 0; height: 100%; width: 120px;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
-            z-index: 10;
             transition: opacity 0.5s ease;
         }
 
+        #channel-name {
+            font-size: 24px;
+            font-weight: bold;
+            background: var(--glass);
+            padding: 12px 35px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Sidebar UI */
+        #ui-wrapper {
+            position: fixed;
+            right: 20px; 
+            top: 0; 
+            height: 100%; 
+            width: 100px;
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            z-index: 10;
+        }
+
         .btn-nav {
-            width: 65px; height: 65px; margin: 10px 0;
-            border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1); color: white;
-            font-size: 28px; cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 60px; height: 60px; margin: 10px 0;
+            border-radius: 50%; border: 2px solid white;
+            background: var(--glass); color: white;
+            font-size: 24px; cursor: pointer;
         }
 
         .btn-nav:focus {
             background: var(--ln-blue);
-            border-color: white;
             transform: scale(1.2);
             outline: none;
-            box-shadow: 0 0 15px var(--ln-blue);
         }
 
-        /* LN Icon Button */
+        /* LN Logo Button */
         #ln-link {
-            margin-top: 20px;
-            text-decoration: none;
+            margin-top: 25px;
+            display: block;
             outline: none;
-            transition: transform 0.2s;
         }
         
         #ln-link img {
-            width: 70px; height: 70px;
+            width: 70px; 
+            height: 70px;
             border-radius: 50%;
             border: 2px solid transparent;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: all 0.2s;
+            display: block;
         }
 
         #ln-link:focus img {
-            transform: scale(1.2);
             border-color: white;
-            box-shadow: 0 0 20px rgba(255,255,255,0.4);
+            transform: scale(1.1);
         }
 
-        /* Initial Start Overlay */
+        /* Start Button */
         #start-overlay {
-            position: fixed; inset: 0; background: #0a0a0a;
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; z-index: 1000;
+            position: fixed; inset: 0; background: #111;
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
         }
 
         #start-btn {
-            padding: 20px 60px; font-size: 22px; font-weight: bold;
+            padding: 20px 50px; font-size: 20px; font-weight: bold;
             background: var(--ln-blue); color: white; border: none;
-            border-radius: 50px; cursor: pointer;
-            transition: transform 0.2s;
+            border-radius: 10px; cursor: pointer;
         }
 
-        #start-btn:focus { transform: scale(1.1); outline: 3px solid white; }
-
-        .hidden { opacity: 0; pointer-events: none; }
+        .fade-out { opacity: 0; }
     </style>
 </head>
 <body>
@@ -128,7 +116,7 @@
     <button id="start-btn" onclick="initPlayer()">ENTRAR A TV</button>
 </div>
 
-<div id="channel-info" class="hidden">
+<div id="channel-info" class="fade-out">
     <div id="channel-name">Cargando...</div>
 </div>
 
@@ -136,9 +124,9 @@
     <div id="player"></div>
 </div>
 
-<div id="ui-wrapper" class="hidden">
-    <button class="btn-nav" id="btn-up" onclick="changeChannel(-1)" title="Canal Anterior">▲</button>
-    <button class="btn-nav" id="btn-down" onclick="changeChannel(1)" title="Siguiente Canal">▼</button>
+<div id="ui-wrapper">
+    <button class="btn-nav" id="btn-up" onclick="changeChannel(-1)">▲</button>
+    <button class="btn-nav" id="btn-down" onclick="changeChannel(1)">▼</button>
     
-    <a id="ln-link" href="https://www.youtube.com/watch?v=DVZ2rJQb_0g" target="_blank">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABY77XmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMAUExURf////7+/v39/fLy8u/v7+Xl5ePj49/f39vb29PT08vLy8TExL+/v7u7u7Ozs6+vr6Ojo5+fn5mZmZOTk4+Pj4mJiYWFhYGBgX5+fnl5eXFxcW9vb2tra2ZmZl5eXlpaWlNTU09PT0tLS0ZGRkJCQj9PTz5OTjtLSzZKSjNLSzJKSi9JSi1JSi5KSi1JSi5KSi9JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSi1JSi5KSun0EkkAAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADNUlEQVRoB7VbZ3vTMBB9idPkKAnDInToAnToAnToAnToAnToAmXvvP9f8iSrnWRLtmS9mI/v8+S8u7vT3ZUn6V6tVv+p6qU8yv69qWvM9ZatGjPlat9C7fV+D7U/+8fS9/K1vX8OfS9p38K7+7QG3pUnNbD69NqA6vNr9783D6uBe/O9etS5N99V78396l7fH07f6+H0vYfT9+7S997D6fseTt97D6fvPZy+93D6vofT9/6m6Xt/U/S9vyn63t8Ufe9vir73N0Xf+5ui7/1N0ff+pui7YvC9X/9pC+Kvvp5rF63+pD936u9dfdfW+3rdrrNn3VvXF517S77YqP+u9F0pX2zcX9XfK/252p+rX6p/Vvpz6Xv7p9O3S99W+nLpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK/176Xv7p9O3S9/WP56+Xfq20r+Xvrd/On279G394+nbpW8r/Xvpe/un07dL39Y/nr5d+rbSv5e+t386fbv0bf3j6dulbyv9e+l7+6fTt0vf1j+evl36ttK/l763fzp9u/Rt/ePp26VvK
+    <a id="ln-link" href="https://www.youtube.com/@lanacion/live" target="_blank">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAD9WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNy4yLWMwMDAgNzkuMWI0ZTI2YjIsIDIwMjIvMTEvMjItMTM6NDI6MjQgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veG1wL21tLzEuMC8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXBN扛PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCAyNC4xIChXaW5kb3dzKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1waWlkOkU0RTRCMUVDQThBRTExRURCRUJFODQyNjU3RjhBMUY5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXBkaWQ6RTRFNEIxRURDOThBRTExRURCRUJFODQyNjU3RjhBMUY5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcGlpZDpFNEU0QjFFQUE4QUUxMUVkQkVCRTg0MjY1N0Y4QTFGOSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wZGlkOkU0RTRCMUVCQzhBRTExRURCRUJFODQyNjU3RjhBMUY5Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+T8961AAABy9JREFUeF7tnX9MVWUYx79XREmIgi6BIAmKID8C+SNoS6IsLXVpizZrtmZrtWpztdaatVpztVpztVpztVpbXf6R09YidXNNS5c/mCAIgiAIivwjCCmC8v7ee7nXc6/nXO69vPee97nf7/P94R7uPef5vvc+7/u855x77oVCoRBC5InK6BfA0YQEIEICEAKACAkhAYiQAIQAIEJCfABH89OfX8G0mTN9zRsc9G9p39uGvpe0b+HdvWpD76uTGnh9em5A8/m9u9/Lp9XAu/pWPGren++q9+Z+da/vD6fu9VD63kPpez2Uvvdw+l4Ppe89nL73UPreX5S+9zdK3/ubpO/9TdD3/iboen9T9L2/Cfre3wR970+Kvvc3Rd/7m6Lv/U3Rd8Xge6/9oxfEXn0971089p7yXz6v6+R9fVfX09qH9q37XfE7p3yxUX9V/70pX2zcf9V/rPz52t+rf67/VPpzpT+Xvrc/nb5d+rbSl0vf2z+dvl36tp7x9O3St5X+vfS9/dPp26Vv6xlP3y59W+nfS9/bP52+Xfq2nvH07dK3lf699L390+nbpW/rGU/fLn1b6d9L39s/nb5d+raeePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+
