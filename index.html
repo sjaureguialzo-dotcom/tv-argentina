@@ -3,167 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>TV Argentina</title>
+    <title>TV Argentina Pro</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; background: #111; font-family: Arial, sans-serif; color: white; overflow: hidden; }
+        html, body { height: 100%; background: #000; font-family: Arial, sans-serif; color: white; overflow: hidden; }
 
         #channel-name {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 28px;
-            font-weight: bold;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
-            background: rgba(0,0,0,0.6);
-            padding: 10px 30px;
-            border-radius: 8px;
-            z-index: 10;
-            white-space: nowrap;
-            transition: opacity 0.3s;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 28px; font-weight: bold; text-shadow: 2px 2px 6px #000;
+            background: rgba(0,0,0,0.7); padding: 10px 30px; border-radius: 8px;
+            z-index: 10; transition: opacity 0.5s;
         }
 
-        #video-area {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: calc(100vw - 100px);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
+        #num-badge {
+            position: fixed; top: 20px; right: 120px;
+            background: #e53935; color: white; padding: 10px 20px;
+            font-size: 35px; font-weight: bold; border-radius: 10px;
+            display: none; z-index: 100;
         }
 
-        #player {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        #video-area { position: fixed; top: 0; left: 0; width: calc(100vw - 100px); height: 100vh; background: #000; }
+        #player { width: 100%; height: 100%; border: none; pointer-events: none; }
 
         #controls {
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 100px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            background: rgba(0,0,0,0.7);
-            z-index: 10;
+            position: fixed; right: 0; top: 0; width: 100px; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 20px; background: rgba(0,0,0,0.8); z-index: 10;
         }
 
-        #controls button {
-            width: 60px;
-            height: 60px;
-            font-size: 28px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.15);
-            border: 2px solid rgba(255,255,255,0.4);
-            color: white;
-            border-radius: 50%;
-            outline: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
+        .btn { width: 60px; height: 60px; font-size: 28px; cursor: pointer; background: rgba(255,255,255,0.1); border: 2px solid #444; color: white; border-radius: 50%; outline: none; }
+        .btn:focus { background: #e53935; border-color: white; }
 
-        #controls button:hover,
-        #controls button:focus {
-            background: rgba(255,255,255,0.35);
-            outline: 3px solid #e53935;
-            outline-offset: 2px;
-        }
-
-        #controls button:active {
-            background: rgba(255,255,255,0.5);
-        }
-
-        #start-btn:focus {
-            outline: 3px solid #fff;
-            outline-offset: 4px;
-        }
-
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-        }
-
-        #start-btn {
-            padding: 20px 40px;
-            font-size: 20px;
-            cursor: pointer;
-            background: #e53935;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        #start-btn:hover {
-            background: #c62828;
-        }
+        #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; align-items: center; justify-content: center; z-index: 20; }
+        #start-btn { padding: 20px 40px; font-size: 20px; background: #e53935; color: white; border: none; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="start-overlay">
-    <button id="start-btn" tabindex="1" onclick="startViewing()">CLICK TO START WATCHING</button>
+    <button id="start-btn" onclick="startViewing()">CLICK TO START WATCHING</button>
 </div>
 
 <div id="channel-name" style="display:none;"></div>
+<div id="num-badge"></div>
 
 <div id="video-area">
-    <iframe id="player"
-            src=""
-            allow="autoplay; encrypted-media"
+    <iframe id="player" src="" 
+            allow="autoplay; encrypted-media" 
+            referrerpolicy="no-referrer"
             allowfullscreen>
     </iframe>
 </div>
 
 <div id="controls">
-    <button id="btn-up" tabindex="2" onclick="switchChannel(-1)" title="Previous channel">&#9650;</button>
-    <button id="btn-down" tabindex="3" onclick="switchChannel(1)" title="Next channel">&#9660;</button>
+    <button id="btn-up" class="btn" onclick="switchChannel(-1)">&#9650;</button>
+    <button id="btn-down" class="btn" onclick="switchChannel(1)">&#9660;</button>
 </div>
 
 <script>
     var channels = [
-        { name: "14. TN", videoId: "cb12KmMMDJA" },
-        { name: "17. Crónica", videoId: "JC7f3EUDaqw" },
-        { name: "18. Canal 26", videoId: "Akf2MWm8vfk" },
-        { name: "19. A24", videoId: "ArKbAx1K-2U" },
-        { name: "24. Argentina|12", videoId: "JrmCaXL5GZs" },
-        { name: "560. Al Jazeera", videoId: "gCNeDWCI0vo" },
-        { name: "562. Euronews", videoId: "pykpO5kQJ98" },
-        { name: "575. France 24", videoId: "Y-IlMeCCtIg" }
+        { id: "14", name: "14 - TN", videoId: "cb12KmMMDJA" },
+        { id: "17", name: "17 - Crónica", videoId: "JC7f3EUDaqw" },
+        { id: "18", name: "18 - Canal 26", videoId: "Akf2MWm8vfk" },
+        { id: "19", name: "19 - A24", videoId: "ArKbAx1K-2U" },
+        { id: "24", name: "24 - Argentina|12", videoId: "JrmCaXL5GZs" },
+        { id: "560", name: "560 - Al Jazeera", videoId: "gCNeDWCI0vo" },
+        { id: "562", name: "562 - Euronews", videoId: "pykpO5kQJ98" },
+        { id: "575", name: "575 - France 24", videoId: "Y-IlMeCCtIg" }
     ];
 
     var currentIndex = 0;
+    var inputBuffer = "";
+    var bufferTimeout = null;
 
-    // Samsung TV remote key codes — standard Tizen (newer models)
-    var KEY_ENTER       = 13;
-    var KEY_BACK        = 10009;
-    var KEY_UP          = 38;
-    var KEY_DOWN        = 40;
-    var KEY_CH_UP       = 427;   // CH+ newer Tizen
-    var KEY_CH_DOWN     = 428;   // CH- newer Tizen
-    var KEY_CH_UP_ALT   = 29460; // CH+ older Tizen / some models
-    var KEY_CH_DOWN_ALT = 29461; // CH- older Tizen / some models
-    var KEY_PLAY        = 415;
-    var KEY_PAUSE       = 19;
-    var KEY_STOP        = 413;
+    // Keys
+    var KEY_UP = 38, KEY_DOWN = 40, KEY_CH_UP = 427, KEY_CH_DOWN = 428;
+    var KEY_CH_UP_ALT = 29460, KEY_CH_DOWN_ALT = 29461, KEY_BACK = 10009;
 
     function startViewing() {
         document.getElementById("start-overlay").style.display = "none";
@@ -173,46 +88,71 @@
     }
 
     function loadChannel(index) {
-        var channel = channels[index];
+        currentIndex = (index + channels.length) % channels.length;
+        var channel = channels[currentIndex];
         var player = document.getElementById("player");
-        player.src = "https://www.youtube.com/embed/" + channel.videoId + "?autoplay=1&mute=0";
-        document.getElementById("channel-name").textContent = channel.name;
+        
+        // Anti-Ad / Clean UI Parameters
+        var params = "?autoplay=1" +
+                     "&mute=0" +
+                     "&controls=0" +      // Hide YT controls (less clickable area)
+                     "&modestbranding=1" + // Remove YT logo
+                     "&rel=0" +            // No related videos at end
+                     "&iv_load_policy=3" + // No annotations
+                     "&showinfo=0";        // Hide video title (legacy)
+
+        player.src = "https://www.youtube.com/embed/" + channel.videoId + params;
+        
+        var nameEl = document.getElementById("channel-name");
+        nameEl.textContent = channel.name;
+        nameEl.style.opacity = "1";
+        setTimeout(() => { nameEl.style.opacity = "0.2"; }, 5000);
     }
 
     function switchChannel(direction) {
-        currentIndex = (currentIndex + direction + channels.length) % channels.length;
-        loadChannel(currentIndex);
+        loadChannel(currentIndex + direction);
+    }
+
+    function handleNumbers(num) {
+        clearTimeout(bufferTimeout);
+        inputBuffer += num;
+        var badge = document.getElementById("num-badge");
+        badge.textContent = inputBuffer;
+        badge.style.display = "block";
+
+        bufferTimeout = setTimeout(() => {
+            var found = channels.findIndex(c => c.id === inputBuffer);
+            if (found !== -1) loadChannel(found);
+            inputBuffer = "";
+            badge.style.display = "none";
+        }, 2000);
     }
 
     document.addEventListener("keydown", function(e) {
         var code = e.keyCode || e.which;
 
-        // Arrow keys + Samsung CH+/CH- (both keycode sets)
+        // Number keys (48-57 = 0-9)
+        if (code >= 48 && code <= 57) {
+            handleNumbers(code - 48);
+        }
+
         if (code === KEY_UP || code === KEY_CH_UP || code === KEY_CH_UP_ALT) {
             e.preventDefault();
             switchChannel(-1);
         } else if (code === KEY_DOWN || code === KEY_CH_DOWN || code === KEY_CH_DOWN_ALT) {
             e.preventDefault();
             switchChannel(1);
-        } else if (code === KEY_ENTER) {
-            // If start overlay is visible, start viewing
-            var overlay = document.getElementById("start-overlay");
-            if (overlay && overlay.style.display !== "none") {
-                e.preventDefault();
-                startViewing();
-            }
         } else if (code === KEY_BACK) {
-            // Prevent Samsung TV from leaving the app on Back press
-            e.preventDefault();
-        } else if (code === KEY_PLAY || code === KEY_PAUSE || code === KEY_STOP) {
             e.preventDefault();
         }
     });
 
-    // Set initial focus for D-pad navigation
-    window.addEventListener("load", function() {
-        document.getElementById("start-btn").focus();
-    });
+    // Register keys for Tizen
+    if (typeof tizen !== 'undefined') {
+        tizen.tvinputdevice.registerKey('ChUp');
+        tizen.tvinputdevice.registerKey('ChDown');
+        for (var i = 0; i <= 9; i++) tizen.tvinputdevice.registerKey(i.toString());
+    }
 </script>
 </body>
 </html>
