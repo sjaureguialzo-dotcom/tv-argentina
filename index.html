@@ -2,131 +2,143 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TV Argentina HD</title>
+    <title>TV Argentina - Numeric Input</title>
     <style>
-        :root {
-            --ln-blue: #0056b3;
-            --glass: rgba(0, 0, 0, 0.8);
+        /* Previous styles remain same */
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
+        #channel-info { 
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); padding: 15px 40px; border-radius: 50px;
+            font-size: 30px; z-index: 100; border: 2px solid #e53935; text-align: center;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background: #000; 
-            color: white; 
-            font-family: Arial, sans-serif;
-            overflow: hidden; 
-            height: 100vh;
+        #num-display {
+            position: fixed; top: 30px; right: 30px;
+            background: #e53935; color: white; padding: 10px 20px;
+            font-size: 40px; font-weight: bold; border-radius: 10px;
+            display: none; z-index: 101;
         }
-
-        /* Video Container */
-        #video-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-        }
-        
-        iframe { width: 100%; height: 100%; pointer-events: none; border: none; }
-
-        /* Channel Info Overlay */
-        #channel-info {
-            position: fixed;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            transition: opacity 0.5s ease;
-        }
-
-        #channel-name {
-            font-size: 24px;
-            font-weight: bold;
-            background: var(--glass);
-            padding: 12px 35px;
-            border-radius: 50px;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        /* Sidebar UI */
-        #ui-wrapper {
-            position: fixed;
-            right: 20px; 
-            top: 0; 
-            height: 100%; 
-            width: 100px;
-            display: none; /* Controlled by JS */
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .btn-nav {
-            width: 60px; height: 60px; margin: 10px 0;
-            border-radius: 50%; border: 2px solid white;
-            background: var(--glass); color: white;
-            font-size: 24px; cursor: pointer;
-        }
-
-        .btn-nav:focus {
-            background: var(--ln-blue);
-            transform: scale(1.2);
-            outline: none;
-        }
-
-        /* LN Logo Button */
-        #ln-link {
-            margin-top: 25px;
-            display: block;
-            outline: none;
-        }
-        
-        #ln-link img {
-            width: 70px; 
-            height: 70px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            display: block;
-        }
-
-        #ln-link:focus img {
-            border-color: white;
-            transform: scale(1.1);
-        }
-
-        /* Start Button */
-        #start-overlay {
-            position: fixed; inset: 0; background: #111;
-            display: flex; align-items: center; justify-content: center; z-index: 1000;
-        }
-
-        #start-btn {
-            padding: 20px 50px; font-size: 20px; font-weight: bold;
-            background: var(--ln-blue); color: white; border: none;
-            border-radius: 10px; cursor: pointer;
-        }
-
-        .fade-out { opacity: 0; }
+        iframe { width: 100vw; height: 100vh; border: none; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="start-overlay">
-    <button id="start-btn" onclick="initPlayer()">ENTRAR A TV</button>
+<div id="start-overlay" style="position:fixed; width:100%; height:100%; background:#111; z-index:200; display:flex; align-items:center; justify-content:center;">
+    <button id="start-btn" onclick="startViewing()" style="padding:20px 40px; font-size:24px; cursor:pointer;">EMPEZAR A VER</button>
 </div>
 
-<div id="channel-info" class="fade-out">
-    <div id="channel-name">Cargando...</div>
-</div>
+<div id="channel-info" style="display:none;"><span id="channel-name">Cargando...</span></div>
+<div id="num-display"></div>
 
-<div id="video-container">
-    <div id="player"></div>
-</div>
+<iframe id="player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-<div id="ui-wrapper">
-    <button class="btn-nav" id="btn-up" onclick="changeChannel(-1)">▲</button>
-    <button class="btn-nav" id="btn-down" onclick="changeChannel(1)">▼</button>
-    
-    <a id="ln-link" href="https://www.youtube.com/@lanacion/live" target="_blank">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAD9WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNy4yLWMwMDAgNzkuMWI0ZTI2YjIsIDIwMjIvMTEvMjItMTM6NDI6MjQgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veG1wL21tLzEuMC8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXBN扛PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCAyNC4xIChXaW5kb3dzKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1waWlkOkU0RTRCMUVDQThBRTExRURCRUJFODQyNjU3RjhBMUY5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXBkaWQ6RTRFNEIxRURDOThBRTExRURCRUJFODQyNjU3RjhBMUY5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcGlpZDpFNEU0QjFFQUE4QUUxMUVkQkVCRTg0MjY1N0Y4QTFGOSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wZGlkOkU0RTRCMUVCQzhBRTExRURCRUJFODQyNjU3RjhBMUY5Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+T8961AAABy9JREFUeF7tnX9MVWUYx79XREmIgi6BIAmKID8C+SNoS6IsLXVpizZrtmZrtWpztdaatVpztVpztVpztVpbXf6R09YidXNNS5c/mCAIgiAIivwjCCmC8v7ee7nXc6/nXO69vPee97nf7/P94R7uPef5vvc+7/u855x77oVCoRBC5InK6BfA0YQEIEICEAKACAkhAYiQAIQAIEJCfABH89OfX8G0mTN9zRsc9G9p39uGvpe0b+HdvWpD76uTGnh9em5A8/m9u9/Lp9XAu/pWPGren++q9+Z+da/vD6fu9VD63kPpez2Uvvdw+l4Ppe89nL73UPreX5S+9zdK3/ubpO/9TdD3/iboen9T9L2/Cfre3wR970+Kvvc3Rd/7m6Lv/U3Rd8Xge6/9oxfEXn0971089p7yXz6v6+R9fVfX09qH9q37XfE7p3yxUX9V/70pX2zcf9V/rPz52t+rf67/VPpzpT+Xvrc/nb5d+rbSl0vf2z+dvl36tp7x9O3St5X+vfS9/dPp26Vv6xlP3y59W+nfS9/bP52+Xfq2nvH07dK3lf699L390+nbpW/rGU/fLn1b6d9L39s/nb5d+raeePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+2fT98ufVvPeePrP176Xvq207+
+<script>
+    var channels = [
+        { id: "14", name: "14. TN", videoId: "cb12KmMMDJA" },
+        { id: "17", name: "17. Crónica", videoId: "JC7f3EUDaqw" },
+        { id: "18", name: "18. Canal 26", videoId: "Akf2MWm8vfk" },
+        { id: "19", name: "19. A24", videoId: "ArKbAx1K-2U" },
+        { id: "24", name: "24. Argentina|12", videoId: "JrmCaXL5GZs" },
+        { id: "560", name: "560. Al Jazeera", videoId: "gCNeDWCI0vo" },
+        { id: "562", name: "562. Euronews", videoId: "pykpO5kQJ98" },
+        { id: "575", name: "575. France 24", videoId: "Y-IlMeCCtIg" }
+    ];
+
+    var currentIndex = 0;
+    var inputBuffer = "";
+    var inputTimer = null;
+
+    var KEY_CODES = {
+        CH_UP: 427, CH_DOWN: 428, CH_UP_ORSAY: 33, CH_DOWN_ORSAY: 34,
+        UP: 38, DOWN: 40, ENTER: 13, RETURN: 10009
+    };
+
+    function startViewing() {
+        document.getElementById("start-overlay").style.display = "none";
+        document.getElementById("channel-info").style.display = "block";
+        loadChannel(0);
+        document.body.focus();
+    }
+
+    function loadChannel(index) {
+        currentIndex = (index + channels.length) % channels.length;
+        var channel = channels[currentIndex];
+        document.getElementById("player").src = "https://www.youtube.com/embed/" + channel.videoId + "?autoplay=1&controls=0&enablejsapi=1";
+        document.getElementById("channel-name").textContent = channel.name;
+        
+        // Visual feedback
+        var info = document.getElementById("channel-info");
+        info.style.display = "block";
+        setTimeout(() => { info.style.opacity = "0.3"; }, 4000);
+    }
+
+    function jumpToChannelId(id) {
+        var foundIndex = channels.findIndex(c => c.id === id);
+        if (foundIndex !== -1) {
+            loadChannel(foundIndex);
+        } else {
+            console.log("Channel " + id + " not found.");
+        }
+    }
+
+    function handleNumericInput(num) {
+        clearTimeout(inputTimer);
+        inputBuffer += num;
+        
+        var display = document.getElementById("num-display");
+        display.textContent = inputBuffer;
+        display.style.display = "block";
+
+        // Wait 2 seconds for next digit, then execute jump
+        inputTimer = setTimeout(() => {
+            jumpToChannelId(inputBuffer);
+            inputBuffer = "";
+            display.style.display = "none";
+        }, 1800);
+    }
+
+    document.addEventListener("keydown", function(e) {
+        var code = e.keyCode || e.which;
+
+        // Numeric Keys (0-9) support for both PC and Tizen/Legacy
+        // KeyCodes 48-57 are numbers 0-9. Tizen sometimes uses 256+ range.
+        if (code >= 48 && code <= 57) {
+            handleNumericInput(code - 48);
+        } else if (code >= 256 && code <= 265) { // Tizen Virtual Number keys
+            handleNumericInput(code - 256);
+        }
+
+        switch(code) {
+            case KEY_CODES.CH_UP:
+            case KEY_CODES.CH_UP_ORSAY:
+            case KEY_CODES.UP:
+                e.preventDefault();
+                loadChannel(currentIndex - 1);
+                break;
+            case KEY_CODES.CH_DOWN:
+            case KEY_CODES.CH_DOWN_ORSAY:
+            case KEY_CODES.DOWN:
+                e.preventDefault();
+                loadChannel(currentIndex + 1);
+                break;
+            case KEY_CODES.ENTER:
+                if (document.getElementById("start-overlay").style.display !== "none") {
+                    startViewing();
+                }
+                break;
+            case KEY_CODES.RETURN:
+                e.preventDefault();
+                break;
+        }
+    });
+
+    // Register numeric keys for Tizen Web Apps
+    if (typeof tizen !== 'undefined') {
+        tizen.tvinputdevice.registerKey('ChUp');
+        tizen.tvinputdevice.registerKey('ChDown');
+        for (var i=0; i<=9; i++) { tizen.tvinputdevice.registerKey(i.toString()); }
+    }
+
+    window.onload = function() { document.getElementById("start-btn").focus(); };
+</script>
+</body>
+</html>
