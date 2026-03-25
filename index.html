@@ -92,18 +92,31 @@
     var KEY_CH_DOWN_ALT = 29461;
     var KEY_BACK        = 10009;
 
-    if (typeof tizen !== "undefined") {
+    var isTizen = (typeof tizen !== "undefined") ||
+                  (navigator.userAgent.indexOf("Tizen") !== -1) ||
+                  (navigator.userAgent.indexOf("SmartTV") !== -1) ||
+                  (navigator.userAgent.indexOf("SMART-TV") !== -1);
+
+    if (isTizen) {
         var keys = ["ChannelUp","ChannelDown","ChUp","ChDown","Return","Back"];
         for (var i = 0; i < keys.length; i++) {
             try { tizen.tvinputdevice.registerKey(keys[i]); } catch(e) {}
         }
     }
 
+    function buildUrl(videoId) {
+        if (isTizen) {
+            return "https://www.youtube.com/embed/" + videoId +
+                   "?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1";
+        } else {
+            return "https://www.youtube.com/watch?v=" + videoId + "&autoplay=1";
+        }
+    }
+
     function loadChannel(index) {
         current = (index + channels.length) % channels.length;
-        var ch = channels[current];
-        document.getElementById("player").src =
-            "https://www.youtube.com/watch?v=" + ch.videoId + "&autoplay=1";
+        var ch  = channels[current];
+        document.getElementById("player").src = buildUrl(ch.videoId);
         document.getElementById("channel-name").textContent = ch.name;
     }
 
