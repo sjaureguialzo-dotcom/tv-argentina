@@ -57,7 +57,12 @@
 <div id="channel-name"></div>
 
 <div id="video-area">
-    <iframe id="player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <iframe id="player"
+            src=""
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowfullscreen>
+    </iframe>
 </div>
 
 <div id="controls">
@@ -98,8 +103,7 @@
         current = (index + channels.length) % channels.length;
         var ch = channels[current];
         document.getElementById("player").src =
-            "https://www.youtube.com/embed/" + ch.videoId +
-            "?autoplay=1&mute=0&rel=0&modestbranding=1";
+            "https://www.youtube.com/watch?v=" + ch.videoId + "&autoplay=1";
         document.getElementById("channel-name").textContent = ch.name;
     }
 
