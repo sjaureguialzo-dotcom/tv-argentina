@@ -22,6 +22,13 @@
             display: none; z-index: 100;
         }
 
+        #error-msg {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(229,57,53,0.85); color: white; padding: 10px 24px;
+            font-size: 18px; border-radius: 8px; z-index: 50;
+            display: none; white-space: nowrap;
+        }
+
         #video-area {
             position: fixed; top: 0; left: 0;
             width: calc(100vw - 100px); height: 100vh; background: #000;
@@ -65,6 +72,7 @@
 
 <div id="channel-name" style="display:none;"></div>
 <div id="num-badge"></div>
+<div id="error-msg"></div>
 
 <div id="video-area">
     <iframe id="player"
@@ -97,7 +105,9 @@
     var inputBuffer   = "";
     var bufferTimeout = null;
     var switchTimer   = null;
+    var errorTimer    = null;
     var SWITCH_DELAY  = 800;
+    var ERROR_TIMEOUT = 8000;
 
     var KEY_UP          = 38;
     var KEY_DOWN        = 40;
@@ -121,6 +131,37 @@
     }
     registerTizenKeys();
 
+    function showError(msg) {
+        var el = document.getElementById("error-msg");
+        el.textContent   = msg;
+        el.style.display = "block";
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(function() {
+            el.style.display = "none";
+        }, 3000);
+    }
+
+    window.addEventListener("message", function(e) {
+        if (!e.data) return;
+        var data;
+        try {
+            data = (typeof e.data === "string") ? JSON.parse(e.data) : e.data;
+        } catch(err) { return; }
+
+        if (data.event === "infoDelivery" && data.info) {
+            if (data.info.playerState === 1) {
+                clearTimeout(errorTimer);
+            }
+        }
+
+        if (data.event === "onError") {
+            clearTimeout(errorTimer);
+            var code = data.info;
+            showError("Canal no disponible (err " + code + ") — cambiando...");
+            setTimeout(function() { switchChannel(1); }, 1500);
+        }
+    });
+
     function loadChannel(index) {
         currentIndex = ((index % channels.length) + channels.length) % channels.length;
         pendingIndex = currentIndex;
@@ -132,10 +173,19 @@
                     + "&modestbranding=1"
                     + "&rel=0"
                     + "&iv_load_policy=3"
-                    + "&showinfo=0";
+                    + "&showinfo=0"
+                    + "&enablejsapi=1"
+                    + "&origin=" + encodeURIComponent(window.location.href);
+
+        clearTimeout(errorTimer);
 
         document.getElementById("player").src =
             "https://www.youtube.com/embed/" + channel.videoId + params;
+
+        errorTimer = setTimeout(function() {
+            showError("Sin señal — cambiando canal...");
+            setTimeout(function() { switchChannel(1); }, 1500);
+        }, ERROR_TIMEOUT);
 
         var nameEl = document.getElementById("channel-name");
         nameEl.textContent   = channel.name;
@@ -155,6 +205,7 @@
         clearTimeout(nameEl._fadeTimer);
 
         clearTimeout(switchTimer);
+        clearTimeout(errorTimer);
         switchTimer = setTimeout(function() {
             loadChannel(pendingIndex);
         }, SWITCH_DELAY);
