@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TV Argentina Pro</title>
+    <title>TV Argentina</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; background: #000; font-family: Arial, sans-serif; color: white; overflow: hidden; }
@@ -12,21 +12,7 @@
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             font-size: 28px; font-weight: bold; text-shadow: 2px 2px 6px #000;
             background: rgba(0,0,0,0.7); padding: 10px 30px; border-radius: 8px;
-            z-index: 10; transition: opacity 0.5s; white-space: nowrap;
-        }
-
-        #num-badge {
-            position: fixed; top: 20px; right: 120px;
-            background: #e53935; color: white; padding: 10px 20px;
-            font-size: 35px; font-weight: bold; border-radius: 10px;
-            display: none; z-index: 100;
-        }
-
-        #error-msg {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: rgba(229,57,53,0.85); color: white; padding: 10px 24px;
-            font-size: 18px; border-radius: 8px; z-index: 50;
-            display: none; white-space: nowrap;
+            z-index: 10; white-space: nowrap; display: none;
         }
 
         #video-area {
@@ -34,7 +20,7 @@
             width: calc(100vw - 100px); height: 100vh; background: #000;
         }
 
-        #player { width: 100%; height: 100%; border: none; pointer-events: none; }
+        #player { width: 100%; height: 100%; border: none; }
 
         #controls {
             position: fixed; right: 0; top: 0; width: 100px; height: 100vh;
@@ -49,7 +35,6 @@
             display: flex; align-items: center; justify-content: center;
         }
         .btn:focus { background: #e53935; border-color: white; }
-        .btn:active { background: rgba(255,255,255,0.35); }
 
         #start-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -61,7 +46,6 @@
             color: white; border: none; border-radius: 10px;
             font-weight: bold; cursor: pointer;
         }
-        #start-btn:hover { background: #c62828; }
     </style>
 </head>
 <body>
@@ -70,44 +54,30 @@
     <button id="start-btn" onclick="startViewing()">CLICK TO START WATCHING</button>
 </div>
 
-<div id="channel-name" style="display:none;"></div>
-<div id="num-badge"></div>
-<div id="error-msg"></div>
+<div id="channel-name"></div>
 
 <div id="video-area">
-    <iframe id="player"
-            src=""
-            allow="autoplay; encrypted-media"
-            referrerpolicy="no-referrer"
-            allowfullscreen>
-    </iframe>
+    <iframe id="player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
 
 <div id="controls">
-    <button id="btn-up"   class="btn" onclick="switchChannel(-1)">&#9650;</button>
-    <button id="btn-down" class="btn" onclick="switchChannel(1)">&#9660;</button>
+    <button class="btn" onclick="switchChannel(-1)">&#9650;</button>
+    <button class="btn" onclick="switchChannel(1)">&#9660;</button>
 </div>
 
 <script>
     var channels = [
-        { id: "14",  name: "14 - TN",           videoId: "cb12KmMMDJA" },
-        { id: "17",  name: "17 - Crónica",       videoId: "JC7f3EUDaqw" },
-        { id: "18",  name: "18 - Canal 26",      videoId: "Akf2MWm8vfk" },
-        { id: "19",  name: "19 - A24",           videoId: "ArKbAx1K-2U" },
-        { id: "24",  name: "24 - Argentina|12",  videoId: "JrmCaXL5GZs" },
-        { id: "560", name: "560 - Al Jazeera",   videoId: "gCNeDWCI0vo" },
-        { id: "562", name: "562 - Euronews",     videoId: "pykpO5kQJ98" },
-        { id: "575", name: "575 - France 24",    videoId: "Y-IlMeCCtIg" }
+        { name: "14 - TN",          videoId: "cb12KmMMDJA" },
+        { name: "17 - Crónica",      videoId: "JC7f3EUDaqw" },
+        { name: "18 - Canal 26",     videoId: "Akf2MWm8vfk" },
+        { name: "19 - A24",          videoId: "ArKbAx1K-2U" },
+        { name: "24 - Argentina|12", videoId: "JrmCaXL5GZs" },
+        { name: "560 - Al Jazeera",  videoId: "gCNeDWCI0vo" },
+        { name: "562 - Euronews",    videoId: "pykpO5kQJ98" },
+        { name: "575 - France 24",   videoId: "Y-IlMeCCtIg" }
     ];
 
-    var currentIndex  = 0;
-    var pendingIndex  = 0;
-    var inputBuffer   = "";
-    var bufferTimeout = null;
-    var switchTimer   = null;
-    var errorTimer    = null;
-    var SWITCH_DELAY  = 800;
-    var ERROR_TIMEOUT = 8000;
+    var current = 0;
 
     var KEY_UP          = 38;
     var KEY_DOWN        = 40;
@@ -117,141 +87,39 @@
     var KEY_CH_DOWN_ALT = 29461;
     var KEY_BACK        = 10009;
 
-    function registerTizenKeys() {
-        if (typeof tizen === "undefined") return;
-        var keys = [
-            "ChannelUp", "ChannelDown",
-            "ChUp", "ChDown",
-            "0","1","2","3","4","5","6","7","8","9",
-            "Return", "Back"
-        ];
+    if (typeof tizen !== "undefined") {
+        var keys = ["ChannelUp","ChannelDown","ChUp","ChDown","Return","Back"];
         for (var i = 0; i < keys.length; i++) {
             try { tizen.tvinputdevice.registerKey(keys[i]); } catch(e) {}
         }
     }
-    registerTizenKeys();
-
-    function showError(msg) {
-        var el = document.getElementById("error-msg");
-        el.textContent   = msg;
-        el.style.display = "block";
-        clearTimeout(el._hideTimer);
-        el._hideTimer = setTimeout(function() {
-            el.style.display = "none";
-        }, 3000);
-    }
-
-    window.addEventListener("message", function(e) {
-        if (!e.data) return;
-        var data;
-        try {
-            data = (typeof e.data === "string") ? JSON.parse(e.data) : e.data;
-        } catch(err) { return; }
-
-        if (data.event === "infoDelivery" && data.info) {
-            if (data.info.playerState === 1) {
-                clearTimeout(errorTimer);
-            }
-        }
-
-        if (data.event === "onError") {
-            clearTimeout(errorTimer);
-            var code = data.info;
-            showError("Canal no disponible (err " + code + ") — cambiando...");
-            setTimeout(function() { switchChannel(1); }, 1500);
-        }
-    });
 
     function loadChannel(index) {
-        currentIndex = ((index % channels.length) + channels.length) % channels.length;
-        pendingIndex = currentIndex;
-
-        var channel = channels[currentIndex];
-        var params  = "?autoplay=1"
-                    + "&mute=0"
-                    + "&controls=0"
-                    + "&modestbranding=1"
-                    + "&rel=0"
-                    + "&iv_load_policy=3"
-                    + "&showinfo=0"
-                    + "&enablejsapi=1"
-                    + "&origin=" + encodeURIComponent(window.location.href);
-
-        clearTimeout(errorTimer);
-
+        current = (index + channels.length) % channels.length;
+        var ch = channels[current];
         document.getElementById("player").src =
-            "https://www.youtube.com/embed/" + channel.videoId + params;
-
-        errorTimer = setTimeout(function() {
-            showError("Sin señal — cambiando canal...");
-            setTimeout(function() { switchChannel(1); }, 1500);
-        }, ERROR_TIMEOUT);
-
-        var nameEl = document.getElementById("channel-name");
-        nameEl.textContent   = channel.name;
-        nameEl.style.opacity = "1";
-        clearTimeout(nameEl._fadeTimer);
-        nameEl._fadeTimer = setTimeout(function() {
-            nameEl.style.opacity = "0.2";
-        }, 5000);
+            "https://www.youtube.com/embed/" + ch.videoId +
+            "?autoplay=1&mute=0&rel=0&modestbranding=1";
+        document.getElementById("channel-name").textContent = ch.name;
     }
 
-    function switchChannel(direction) {
-        pendingIndex = ((pendingIndex + direction) % channels.length + channels.length) % channels.length;
-
-        var nameEl = document.getElementById("channel-name");
-        nameEl.textContent   = channels[pendingIndex].name;
-        nameEl.style.opacity = "1";
-        clearTimeout(nameEl._fadeTimer);
-
-        clearTimeout(switchTimer);
-        clearTimeout(errorTimer);
-        switchTimer = setTimeout(function() {
-            loadChannel(pendingIndex);
-        }, SWITCH_DELAY);
+    function switchChannel(dir) {
+        loadChannel(current + dir);
     }
 
     function startViewing() {
         document.getElementById("start-overlay").style.display = "none";
         document.getElementById("channel-name").style.display  = "block";
-        pendingIndex = 0;
         loadChannel(0);
-        document.getElementById("btn-up").focus();
-    }
-
-    function handleNumbers(num) {
-        clearTimeout(bufferTimeout);
-        inputBuffer += num;
-        var badge = document.getElementById("num-badge");
-        badge.textContent   = inputBuffer;
-        badge.style.display = "block";
-
-        bufferTimeout = setTimeout(function() {
-            var found = -1;
-            for (var i = 0; i < channels.length; i++) {
-                if (channels[i].id === inputBuffer) { found = i; break; }
-            }
-            if (found !== -1) loadChannel(found);
-            inputBuffer         = "";
-            badge.style.display = "none";
-        }, 2000);
     }
 
     document.addEventListener("keydown", function(e) {
-        var code = e.keyCode || e.which;
-
-        if (code >= 48 && code <= 57) {
-            handleNumbers(code - 48);
-            return;
-        }
-
-        if (code === KEY_UP || code === KEY_CH_UP || code === KEY_CH_UP_ALT) {
-            e.preventDefault();
-            switchChannel(-1);
-        } else if (code === KEY_DOWN || code === KEY_CH_DOWN || code === KEY_CH_DOWN_ALT) {
-            e.preventDefault();
-            switchChannel(1);
-        } else if (code === KEY_BACK) {
+        var c = e.keyCode || e.which;
+        if (c === KEY_UP || c === KEY_CH_UP || c === KEY_CH_UP_ALT) {
+            e.preventDefault(); switchChannel(-1);
+        } else if (c === KEY_DOWN || c === KEY_CH_DOWN || c === KEY_CH_DOWN_ALT) {
+            e.preventDefault(); switchChannel(1);
+        } else if (c === KEY_BACK) {
             e.preventDefault();
         }
     });
