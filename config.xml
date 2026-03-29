@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns:tizen="http://tizen.org/ns/widgets"
+        xmlns="http://www.w3.org/ns/widgets"
+        id="http://yourdomain/TVArgentina"
+        version="1.0.0"
+        viewmodes="maximized">
+
+    <!-- Allow access to all external domains including YouTube -->
+    <access origin="*" subdomains="true"></access>
+
+    <!-- Allow navigation to YouTube and related domains in iframes -->
+    <tizen:allow-navigation>
+        *.youtube.com
+        *.ytimg.com
+        *.googlevideo.com
+        *.google.com
+        *.googleapis.com
+        *.gstatic.com
+        *.doubleclick.net
+    </tizen:allow-navigation>
+
+    <content src="index.html"/>
+    <icon src="icon.png"/>
+    <name>TV Argentina</name>
+
+    <tizen:application id="TVArgentina.App"
+                       package="TVArgentina"
+                       required_version="2.3"/>
+
+    <!-- Network privilege required for internet access -->
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/network.public"/>
+
+</widget>
